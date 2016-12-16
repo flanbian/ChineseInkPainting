@@ -31,6 +31,7 @@ class Diffusion:
         
     def diffusion(self, r, n):
     	  #image = color.rgb2gray(image)
+        tmpImg = np.zeros((self.img.shape[0], self.img.shape[1], 3), np.uint8)
         imgSize = self.img.shape
         imgWidth = imgSize[1]
         imgHeight = imgSize[0]
@@ -54,9 +55,9 @@ class Diffusion:
                 else:
                     y = height + (operationY * yRand)
 
-                self.img.itemset((height, width, 0), self.img.item(y, x, 0))
-                self.img.itemset((height, width, 1), self.img.item(y, x, 1))
-                self.img.itemset((height, width, 2), self.img.item(y, x, 2))
+                tmpImg.itemset((height, width, 0), self.img.item(y, x, 0))
+                tmpImg.itemset((height, width, 1), self.img.item(y, x, 1))
+                tmpImg.itemset((height, width, 2), self.img.item(y, x, 2))
         
         '''
         cv2.imshow('diffusion step 1', image)
@@ -66,7 +67,7 @@ class Diffusion:
         '''
 
         boundary = n / 2
-        targetImg = self.img
+        targetImg = np.zeros((self.img.shape[0], self.img.shape[1], 3), np.uint8)
         for height in xrange(imgHeight):
             for width in xrange(imgWidth):
                 filterB = []
@@ -95,9 +96,9 @@ class Diffusion:
                     
                 for x in xrange(heightRangeStart, heightRangeEnd):
                     for y in xrange(widthRangeStart, widthRangeEnd):
-                        filterB.append(self.img.item(x, y, 0))
-                        filterG.append(self.img.item(x, y, 1))
-                        filterR.append(self.img.item(x, y, 2))
+                        filterB.append(tmpImg.item(x, y, 0))
+                        filterG.append(tmpImg.item(x, y, 1))
+                        filterR.append(tmpImg.item(x, y, 2))
 
                 medianB = np.median(filterB)
                 medianG = np.median(filterG)
@@ -105,11 +106,10 @@ class Diffusion:
                 targetImg.itemset((height, width, 0), medianB)
                 targetImg.itemset((height, width, 1), medianG)
                 targetImg.itemset((height, width, 2), medianR)
-        
-        return targetImg
         '''
         cv2.imshow('diffusion step 2', targetImg)
         cv2.imwrite('diffusion_2.png', targetImg)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         '''
+        return targetImg
