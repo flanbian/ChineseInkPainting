@@ -26,6 +26,7 @@ print sourceFiles
 for sourceFile in sourceFiles:
 
     img = cv2.imread(SOURCE_PATH + sourceFile)
+
     # SaliencyMap start
     print "SaliencyMap start"
     img_width  = img.shape[1]
@@ -99,27 +100,44 @@ for sourceFile in sourceFiles:
     '''
     print "Decolorization finish"
     # Decolorization finish
-    xdogImg = cv2.blur(xdogImg, (2, 2))
-    EdgeCombinationImg = cv2.addWeighted(xdogImg, 0.2, decolorizationImg, 0.8, 0)
+
+    # Combine detail start
+    print "Combine detail start"
+    dog = Dog(img)
+    secondXdogImg = cv2.cvtColor(np.uint8(dog.xdogGrayTransform(dog.xdog(1.0, 2.0))), cv2.COLOR_GRAY2RGB)
+    xdogImgBlur = cv2.blur(secondXdogImg, (2, 2))
+    edgeCombinationImg = cv2.addWeighted(xdogImgBlur, 0.1, decolorizationImg, 0.9, 0)
+    print "Combine detail finish"
+    # Combine detail finish
 
     # Paper Texture start
     print "Paper Texture start"
     height, width = img.shape[:2]
     textureImg = cv2.imread("SourceImg/xuan_paper.jpg")
     textureImg = cv2.resize(textureImg, (width, height), interpolation = cv2.INTER_CUBIC)
+    textureImg = cv2.addWeighted(textureImg, 0.1, edgeCombinationImg, 0.9, 0)
     print "Paper Texture finish"
     # Paper Texture finish
 
-    textureImg = cv2.addWeighted(textureImg, 0.2, EdgeCombinationImg, 0.8, 0)
+    # Second decolorization start
+    print "Second decolorization start"
+    decolorization = Decolorization(textureImg)
+    SecondDecolorationImg = decolorization.decolorization(20.0, 200.0)
+    SecondDecolorationImg = cv2.cvtColor(SecondDecolorationImg, cv2.COLOR_GRAY2RGB)
+    print "Second decolorization finish"
+    # Second decolorization end
 
     resultPath = RESULT_PATH + sourceFile[:-4] + "/"
     if not os.path.exists(resultPath):
         os.makedirs(resultPath)
+
     cv2.imwrite(resultPath + "saliencyMap.png", saliencyMapImg)
     cv2.imwrite(resultPath + "saliencyMapAndSourceImg.png", saliencyMapAndSourceImg)
     cv2.imwrite(resultPath + "abstractImg.png", abstractImg)
     cv2.imwrite(resultPath + "diffusionImg.png", diffusionImg)
     cv2.imwrite(resultPath + "xdogImg.png", xdogImg)
-    cv2.imwrite(resultPath + "EdgeCombinationImg.png", EdgeCombinationImg)
+    cv2.imwrite(resultPath + "xdogImgBlur.png", xdogImgBlur)
+    cv2.imwrite(resultPath + "edgeCombinationImg.png", edgeCombinationImg)
     cv2.imwrite(resultPath + "decolorizationImg.png", decolorizationImg)
     cv2.imwrite(resultPath + "textureImg.png", textureImg)
+    cv2.imwrite(resultPath + "SecondDecolorationImg.png", SecondDecolorationImg)
