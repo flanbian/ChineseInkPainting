@@ -7,6 +7,8 @@ from ink_diffusion.diffusion import Diffusion
 from dog import Dog
 from fdog import *
 from decolorization import Decolorization
+from guided_filter.results.smooth_noise import runSmoothNoiseResult
+from guided_filter.cv.image import *
 
 import os
 from os import listdir
@@ -16,8 +18,8 @@ from os.path import isfile, join
 #from saliency_map.utils import OpencvIo
 #from skimage import io, color
 
-SOURCE_PATH = "SourceImg/dragon/"
-RESULT_PATH = "Result/dragon/"
+SOURCE_PATH = "SourceImg/"
+RESULT_PATH = "Result/"
 
 sourceFiles = [f for f in listdir(SOURCE_PATH) 
         if isfile(join(SOURCE_PATH, f)) and f.endswith(".jpg") and not f.startswith("xuan")
@@ -52,6 +54,9 @@ def getAbstractionImg(image):
     saveImg("abstractImg.png", abstractImg)
     print "Abstraction finish"
     return abstractImg
+
+def getGuidedFilter(image):
+    return runSmoothNoiseResult(image)
 
 def getDiffusionImg(image):
     print "Diffusion start"
@@ -132,10 +137,12 @@ for sourceFile in sourceFiles:
     #image = getXDoGImg(img, 1.0, 3.0)
     FDoGImage = getFDoGImg(img)
     textureImage = getTextureImg(img)
+    textureImage = np.float32(textureImage)
     
     image = getSaliencyMapImg(img)
     image = cv2.addWeighted(image, 0.2, img, 0.8, 0)
-    image = getAbstractionImg(image)
+    #image = getAbstractionImg(image)
+    image = getGuidedFilter(image)
     image = getDiffusionImg(image)
     image = getDecolorizationImg(image)
     image = combineTwoImageWithBlack(image, FDoGImage, 0.8, "detail.png")
